@@ -1,0 +1,25 @@
+
+language: python
+python: "3.6"
+env:
+  global:
+    - BACKEND_PATH=$TRAVIS_BUILD_DIR/server
+    - DOCKER_PATH=$TRAVIS_BUILD_DIR/server/docker/release/Dockerfile
+    - IMAGE_TAG=planimation/backend:latest
+services:
+  - docker
+before_script: 
+  - pip install docker-compose
+  - pip install -r server/requirements.txt
+jobs:
+  include:
+    - stage: "Unit testing"
+      if: branch = develop
+      script: 
+        - python -m unittest server/unit_test/test_cases.py
+    - stage: "Build docker image"
+      if: branch = develop
+      script: 
+        - docker build -t $IMAGE_TAG -f $DOCKER_PATH $BACKEND_PATH
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+        - docker push $IMAGE_TAG

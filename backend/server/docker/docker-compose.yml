@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+
+  backend:
+    image: planimation/backend:latest
+    command: "/usr/local/bin/gunicorn server.wsgi --chdir=/code -w 4 -b 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    restart: always
+
+  frontend:
+    image: planimation/frontend:latest
+    ports:
+      - "3000:80"
+    restart: always
