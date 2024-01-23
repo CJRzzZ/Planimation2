@@ -24,6 +24,8 @@
 #-- Version  : 2.0
 #--------------------------------------------------------------------------------
 import urllib.request
+import requests
+import time
 import json
 import sys
 import os
@@ -70,6 +72,51 @@ def get_plan(domain_file, problem_file,url):
     else:
         return plan
 
+def get_plan_from_pass(domain_file, problem_file, address, solver):
+    """
+    This function will send the domain and problem pddl to the solver API to get the plan.
+    :param domain_file: domain pddl text
+    :param problem_file: problem pddl text
+    :param url: Solver url
+    :return: plan return by the planning.domain API
+    """
+
+    data = {'domain': domain_file,
+            'problem': problem_file}
+
+    #solve_request_url=requests.post(address+"/package/lama-first/solve", json=req_body).json()
+    
+    # Send job request to solve endpoint
+    if address == '':
+        address = "https://paas-uom.org:5001"
+    url = address+"/package/"+solver+"/solve"
+    
+    try:
+        solve_request_url=requests.post(url, json=data).json()
+        # Query the result in the job
+        celery_result=requests.post(address+ solve_request_url['result'])
+
+        print('Computing...')
+        while celery_result.json().get("status","")== 'PENDING':
+
+            # Query the result every 0.5 seconds while the job is executing
+            celery_result=requests.post(address + solve_request_url['result'])
+            time.sleep(0.25)
+        
+    except:
+        raise Exception("Failed to connect the remote solver. Please check the solver name or remote PaaS address.")
+
+    #print(celery_result.json())
+
+    plan = celery_result.json()
+    #print(plan)
+    status = plan['status']
+    if status == "error" :
+        error = plan['result']['error']
+        raise Exception("Failed to get the plan/solution --  " + error)
+    else:
+        return plan
+    
 
 def get_plan_actions(domain_file, actions):
     domain=Problem(domain_file)
