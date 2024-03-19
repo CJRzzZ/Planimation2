@@ -84,7 +84,7 @@ def get_plan_from_pass(domain_file, problem_file, address, solver):
     data = {'domain': domain_file,
             'problem': problem_file}
 
-    #solve_request_url=requests.post(address+"/package/lama-first/solve", json=req_body).json()
+    #solve_request_url=requests.post(address+"/package/lama-first/solve", json=req_body).json()     
     
     # Send job request to solve endpoint
     if address == '':

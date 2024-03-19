@@ -18,7 +18,6 @@
 #-- Version  : 1.0
 #--------------------------------------------------------------------------------
 import re
-import unified_planning as unip
 
 
 #######################################################
@@ -58,14 +57,3 @@ def get_domain_json(domain_text):
     except:
         raise ValueError("Empty string found")
     
-def get_domain_json_unified(domain_text):
-    """
-    This function return a list of predicates in domain profile using Unified Planning package and support numerical variable.
-    :param domain_text: domain pddl text
-    :return: a nested dictionary contain which key is the predicate name and value is a dictionary, which stores predicate's type and the number of arity(arguments)
-    """
-    reader = unip.io.PDDLReader()
-    pddl_problem = reader.parse_problem_string(domain_text)
-    PredicateList = {f.name:{"type": f.type, "arity": f.arity} for f in pddl_problem.fluents}
-    
-    return PredicateList

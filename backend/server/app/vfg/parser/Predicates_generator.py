@@ -47,7 +47,8 @@ def get_stages(plan, problem_dic, problem_file, predicates_list):
 
     # Getting the list of actions from results returned from planning.domain api
     try:
-        actionlist = plan['result']['plan']
+        actionlist = plan['result']['output']['sas_plan']
+        #actionlist = plan['result']['plan']
     except KeyError:
         raise Exception("No plan has been returned")
 
@@ -136,3 +137,5 @@ def get_action_effect_list(action_list):
                                       + len("effect"):])
         action_effect_list.append(clearnedstr[:-1])
     return action_effect_list
+
+

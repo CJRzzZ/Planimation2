@@ -32,7 +32,7 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/../' + "parser"))
 import Parser_Functions
 
 
-def get_problem_dic(problem_text, predicates_lists):
+def get_problem_dic_unified(problem):
     """
     The function will parse the problem pddl and get the Initial predicates and
     and goal predicates
@@ -42,23 +42,56 @@ def get_problem_dic(problem_text, predicates_lists):
     """
 
     # Prepare REGEX for each predicate
-    try:
-        get_regex_list(predicates_lists)
-    except:
-        raise ValueError("Empty predicates found")
+    init_state = {"init": []}
+    goal_state = {"goal": [], "goal-condition": ["and"]}
 
-    text_blocks = Parser_Functions.get_bracket(problem_text, 2)
 
-    result = []
-    for block in text_blocks:
-        if "init" in block:
-            init_object_list = get_state_list(predicates_lists, block)
-            result.append({"init": init_object_list})
-        elif "goal" in block:
-            goal_object_list = get_state_list(predicates_lists, block)
-            result.append({"goal": goal_object_list, "goal-condition": ["and"]})
+    for fnode, value in problem.initial_values.items():
+        if value.is_bool_constant():
+            if value.is_true():
+                #fluent_object = fnode.fluent()
+                fluent = fnode_object_to_fluent(fnode)
+                fluent['value'] = value.constant_value()
+                init_state['init'].append(fluent)
+        else:
+            #fluent_object = fnode.fluent()
+            # fluent = fluent_object_to_predicate(fluent_object)
+            fluent = fnode_object_to_fluent(fnode)
+            fluent['value'] = value.constant_value()
+            init_state['init'].append(fluent)
+    #print(init_state)
+    for expression in problem.goals:
+        for exp in expression.args:
+            # fluent_object = exp.fluent()
+            #value = exp.constant_value()
+            #fluent = fluent_object_to_predicate(fluent_object)
+            fluent = fnode_object_to_fluent(exp)
+            fluent['value'] = True
+            goal_state['goal'].append(fluent)
+    
+    return [init_state, goal_state]
 
-    return result
+
+# def fnode_to_state(fnode_object):
+#     state = []
+    
+#     for exp in fnode_object.args:
+#         fluent_object = exp.fluent()
+#         value = exp.constant_value()
+#         fluent = fluent_object_to_predicate(fluent_object)
+#         fluent['value'] = value
+#         state.append(fluent)
+#     return state
+
+def fnode_object_to_fluent(fnode):
+    """
+    This function used to transfer the fluent object in unified planning to existing data structure in Planimation
+    :param predicates_lists: a dictionary contain predicate name and the number of objects pair
+    :return: dictionary which contain predicate name and predicate pattern pair
+    """
+    fluent = fnode.fluent()
+
+    return {'name':fluent.name, 'objectName':[object.object().name for object in fnode.args], 'type':fluent.type}
 
 
 def get_regex_list(predicates_lists):
@@ -137,15 +170,10 @@ def get_separate_state_list(predicates_pattern_dic, text_block):
     return add_result, remove_result
 
 
-def get_object_list(problem_text):
+def get_object_list_unified(problem):
     """
     This function return the object list in problem PDDL
-    :param problem_text: problem text
-    :return: object list
+    :param problem_text: Unified_planning Problem object
+    :return: a list of objects in str
     """
-    block_list = Parser_Functions.get_bracket(problem_text, 2)
-    for block in block_list:
-        if "objects" in block:
-            objects = Parser_Functions.parse_objects(block)
-            return objects
-
+    return [object.name for object in problem.all_objects]
